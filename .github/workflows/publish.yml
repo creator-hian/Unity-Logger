@@ -22,13 +22,14 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '14'  # 프로젝트에 맞는 Node.js 버전 설정
-          registry-url: 'https://npm.pkg.github.com/@creator-hian'
+          registry-url: 'https://npm.pkg.github.com/'
+          scope: '@creator-hian'  # 패키지 스코프 설정
+          always-auth: true
 
       # 3. GitHub Packages 인증 설정
       - name: Configure npm for GitHub Packages
         run: |
           echo "//npm.pkg.github.com/:_authToken=${{ secrets.REPOSITORY_PAT }}" > ~/.npmrc
-          echo "@creator-hian:registry=https://npm.pkg.github.com/" >> ~/.npmrc
 
       # 4. 패키지 종속성 설치 (필요 시)
       - name: Install Dependencies
