@@ -28,7 +28,7 @@ jobs:
       - name: Configure npm for GitHub Packages
         run: |
           echo "//npm.pkg.github.com/:_authToken=${{ secrets.REPOSITORY_PAT }}" > ~/.npmrc
-          echo "registry=https://npm.pkg.github.com/" >> ~/.npmrc
+          echo "@creator-hian:registry=https://npm.pkg.github.com/" >> ~/.npmrc
 
       # 4. 패키지 종속성 설치 (필요 시)
       - name: Install Dependencies
