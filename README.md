@@ -18,30 +18,66 @@ Unity의 기본 로깅 시스템을 확장하여 파일 로깅 기능과 로그 
 
 ## 설치 방법
 
-### GitHub Packages를 통한 설치
+### UPM을 통한 설치 (Git URL 사용)
 
-1. Unity 프로젝트의 `Packages/manifest.json` 파일에 다음 내용을 추가:
+#### 선행 조건
+
+- Git 클라이언트(최소 버전 2.14.0)가 설치되어 있어야 합니다.
+- Windows 사용자의 경우 `PATH` 시스템 환경 변수에 Git 실행 파일 경로가 추가되어 있어야 합니다.
+
+#### 설치 방법 1: Package Manager UI 사용
+
+1. Unity 에디터에서 Window > Package Manager를 엽니다.
+2. 좌측 상단의 + 버튼을 클릭하고 "Add package from git URL"을 선택합니다.
+
+   ![Package Manager Add Git URL](.\Document\upm-ui-giturl.png)
+3. 다음 URL을 입력합니다:
+
+```
+https://github.com/creator-hian/Unity-Logger.git
+```
+
+4. 'Add' 버튼을 클릭합니다.
+   
+   ![Package Manager Add Button](.\Document\upm-ui-giturl.png)
+
+#### 설치 방법 2: manifest.json 직접 수정
+
+1. Unity 프로젝트의 `Packages/manifest.json` 파일을 열어 다음과 같이 dependencies 블록에 패키지를 추가하세요:
 
 ```json
 {
-    "scopedRegistries": [
-        {
-            "name": "GitHub",
-            "url": "https://npm.pkg.github.com/@creator-hian",
-            "scopes": [
-                "com.creator-hian"
-            ]
-        }
-    ],
-    "dependencies": {
-        "com.creator-hian.unity.logger": "0.0.1"
-    }
+  "dependencies": {
+    "com.creator-hian.unity.logger": "https://github.com/creator-hian/Unity-Logger.git",
+    ...
+  }
 }
 ```
 
-2. GitHub 인증 설정:
-   - GitHub 개인 액세스 토큰(PAT) 생성
-   - `.npmrc` 파일 설정
+#### 특정 버전 설치
+
+특정 버전을 설치하려면 URL 끝에 #{version} 을 추가하세요:
+
+```json
+{
+  "dependencies": {
+    "com.creator-hian.unity.logger": "https://github.com/creator-hian/Unity-Logger.git#0.0.1",
+    ...
+  }
+}
+```
+
+#### 문제 해결
+
+설치 중 다음과 같은 오류가 발생할 경우:
+
+- 'Git' 실행 파일을 찾을 수 없음: Git이 올바르게 설치되어 있는지 확인하세요.
+- 저장소를 찾을 수 없음: URL이 올바른지 확인하세요.
+- Git 관련 기타 오류: Unity 에디터를 재시작하거나 프로젝트를 다시 열어보세요.
+
+## 참조 문서
+
+- [Unity 공식 매뉴얼 - Git URL을 통한 패키지 설치](https://docs.unity3d.com/kr/2023.2/Manual/upm-ui-giturl.html)
 
 ## 사용 방법
 
