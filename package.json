@@ -17,7 +17,7 @@
   "description": "Unity의 기본 로깅 시스템을 확장한 고급 로깅 패키지입니다. 파일 로깅, 스레드 안전 로깅, 로그 파일 관리 등을 지원합니다.",
   "dependencies": {},
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
+    "registry": "https://npm.pkg.github.com/@creator-hian"
   },
   "repository": {
     "type": "git",
