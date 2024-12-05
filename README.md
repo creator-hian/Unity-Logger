@@ -33,12 +33,12 @@ Unity의 기본 로깅 시스템을 확장하여 파일 로깅 기능과 로그 
    ![Package Manager Add Git URL](Document/upm-ui-giturl.png)
 3. 다음 URL을 입력합니다:
 
-```
+```text
 https://github.com/creator-hian/Unity-Logger.git
 ```
 
 4. 'Add' 버튼을 클릭합니다.
-   
+
    ![Package Manager Add Button](Document/upm-ui-giturl-add.png)
 
 #### 설치 방법 2: manifest.json 직접 수정
