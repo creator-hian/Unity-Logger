@@ -2,7 +2,6 @@ using NUnit.Framework;
 using UnityEngine;
 using System.IO;
 using System;
-using Hian.Logger;
 using Hian.Logger.Utilities;
 
 public class LogFileUtilityTests

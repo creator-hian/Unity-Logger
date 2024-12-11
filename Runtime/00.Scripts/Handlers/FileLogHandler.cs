@@ -65,7 +65,7 @@ namespace Hian.Logger.Handlers
         }
 
         /// <summary>
-        /// 로그 메시지를 포맷팅하여 기록합니���.
+        /// 로그 메시지를 포맷팅하여 기록합니다.
         /// </summary>
         /// <param name="logType">로그 타입</param>
         /// <param name="context">로그 컨텍스트</param>

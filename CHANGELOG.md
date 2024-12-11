@@ -11,6 +11,21 @@ All notable changes to this project will be documented in this file.
   - **Minor**: 하위 호환성 있는 기능 추가
   - **Patch**: 하위 호환성 있는 버그 수정
 
+## [0.1.1] - 2024-12-12
+
+### Added
+
+- 디버그 로그 기능 추가
+  - 스크립팅 심볼을 통한 디버그 로그 제어 (`ENABLE_LOGGER_DEBUG`)
+  - Development Build 시 자동 활성화
+  - 런타임에서 수동 제어 가능
+  - 로거 내부 동작 추적을 위한 상세 로깅
+
+### Changed
+
+- DefaultDiagnosticsLogger의 디버그 메시지를 중앙 관리 방식으로 변경
+- 로거 초기화 및 정리 과정의 가시성 개선
+
 ## [0.1.0] - 2024-12-11
 
 ### Added

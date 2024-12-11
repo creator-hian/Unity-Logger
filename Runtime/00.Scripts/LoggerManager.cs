@@ -15,12 +15,18 @@ namespace Hian.Logger
         private static UnityEngine.ILogHandler _defaultHandler;
         private static ILogHandler _currentHandler;
         private static readonly Dictionary<string, IDiagnosticsLogger> _diagnosticsLoggers = new();
+        private static bool _isDebugLogEnabled = false;
 
         static LoggerManager()
         {
             _originalUnityHandler = Debug.unityLogger.logHandler;
             _defaultHandler = _originalUnityHandler;
             _currentHandler = null;
+
+            // 스크립팅 심볼에 따라 디버그 로그 활성화
+#if DEVELOPMENT_BUILD || ENABLE_LOGGER_DEBUG
+            IsDebugLogEnabled = true;
+#endif
         }
 
         /// <summary>
@@ -84,10 +90,14 @@ namespace Hian.Logger
         /// 특정 시스템에 대한 진단 로거를 생성하고 등록합니다.
         /// </summary>
         /// <param name="system">시스템 식별자</param>
+        /// <param name="logDirectory">로그 디렉토리 (null인 경우 기본 디렉토리 사용)</param>
         /// <param name="logger">사용할 커스텀 로거 (null인 경우 기본 로거 사용)</param>
         /// <returns>생성된 진단 로거</returns>
         /// <exception cref="InvalidOperationException">이미 해당 시스템의 로거가 존재하는 경우</exception>
-        public static IDiagnosticsLogger CreateDiagnosticsLogger(string system, IDiagnosticsLogger logger = null)
+        public static IDiagnosticsLogger CreateDiagnosticsLogger(
+            string system, 
+            string logDirectory = null, 
+            IDiagnosticsLogger logger = null)
         {
             if (_diagnosticsLoggers.ContainsKey(system))
             {
@@ -95,7 +105,7 @@ namespace Hian.Logger
             }
 
             var newLogger = logger ?? new DefaultDiagnosticsLogger();
-            newLogger.Initialize($"HianLogger_{system}");
+            newLogger.Initialize(system, logDirectory);
             _diagnosticsLoggers[system] = newLogger;
             return newLogger;
         }
@@ -120,6 +130,28 @@ namespace Hian.Logger
             _diagnosticsLoggers.Clear();
         }
 
+        /// <summary>
+        /// 특정 시스템의 진단 로거를 제거합니다.
+        /// </summary>
+        /// <param name="system">제거할 시스템의 식별자</param>
+        public static void RemoveDiagnosticsLogger(string system)
+        {
+            if (string.IsNullOrEmpty(system))
+                return;
+
+            IDiagnosticsLogger logger = null;
+            lock (_diagnosticsLoggers)
+            {
+                if (_diagnosticsLoggers.TryGetValue(system, out logger))
+                {
+                    _diagnosticsLoggers.Remove(system);
+                }
+            }
+
+            // Dictionary에서 제거 후 정리 작업 수행
+            logger?.Cleanup();
+        }
+
         #endregion
 
         /// <summary>
@@ -137,6 +169,42 @@ namespace Hian.Logger
         public static UnityEngine.ILogHandler GetOriginalUnityHandler()
         {
             return _originalUnityHandler;
+        }
+
+        /// <summary>
+        /// 디버그 로그 활성화 여부를 설정합니다.
+        /// </summary>
+        public static bool IsDebugLogEnabled
+        {
+            get => _isDebugLogEnabled;
+            set => _isDebugLogEnabled = value;
+        }
+
+        /// <summary>
+        /// 디버그 로그를 출력합니다. IsDebugLogEnabled가 true인 경우에만 동작합니다.
+        /// </summary>
+        internal static void DebugLog(string message)
+        {
+            if (_isDebugLogEnabled)
+            {
+                Debug.Log($"[Logger] {message}");
+            }
+        }
+
+        internal static void DebugLogWarning(string message)
+        {
+            if (_isDebugLogEnabled)
+            {
+                Debug.LogWarning($"[Logger] {message}");
+            }
+        }
+
+        internal static void DebugLogError(string message)
+        {
+            if (_isDebugLogEnabled)
+            {
+                Debug.LogError($"[Logger] {message}");
+            }
         }
     }
 }
