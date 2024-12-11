@@ -1,242 +1,229 @@
 using UnityEngine;
+using System;
 using System.IO;
 using System.Text;
-using System.Collections.Concurrent;
-using System.Threading;
 
 namespace Hian.Logger.Handlers
 {
     /// <summary>
-    /// 파일과 Unity 콘솔 모두에 로그를 기록하는 핸들러
+    /// 파일 기반 로그 핸들러 클래스입니다.
+    /// 로그 메시지를 파일에 기록하고 선택적으로 Unity 콘솔에도 출력합니다.
+    /// 스레드 안전한 로깅을 지원하며, 파일 접근 오류를 자동으로 처리합니다.
     /// </summary>
-    internal class FileLogHandler : ILogHandler, System.IDisposable
+    public class FileLogHandler : ILogHandler, IDisposable
     {
-        private readonly string _logFilePath;
         private readonly object _lockObject = new object();
-        private readonly ILogHandler _defaultLogHandler;
         private bool _enableConsoleOutput;
-        private volatile bool _isDisposed;
-        
-        // 로그 메시지를 위한 스레드 안전 큐
-        private readonly ConcurrentQueue<string> _messageQueue;
-        private readonly AutoResetEvent _messageEvent;
-        private readonly Thread _writerThread;
+        private string _logFilePath;
         private StreamWriter _streamWriter;
-        private FileStream _fileStream;
+        private bool _isDisposed;
+        private readonly UnityEngine.ILogHandler _defaultLogHandler;
 
         /// <summary>
-        /// FileLogHandler를 초기화합니다.
+        /// FileLogHandler의 새 인스턴스를 초기화합니다.
         /// </summary>
-        /// <param name="logFilePath">로그 파일 경로</param>
+        /// <param name="logFilePath">로그를 기록할 파일 경로</param>
         /// <param name="enableConsoleOutput">Unity 콘솔 출력 활성화 여부</param>
-        public FileLogHandler(string logFilePath, bool enableConsoleOutput = true)
+        /// <param name="defaultLogHandler">기본 로그 핸들러</param>
+        /// <exception cref="ArgumentNullException">logFilePath가 null인 경우</exception>
+        public FileLogHandler(string logFilePath, bool enableConsoleOutput = true, UnityEngine.ILogHandler defaultLogHandler = null)
         {
-            _logFilePath = logFilePath;
-            _defaultLogHandler = Debug.unityLogger.logHandler;
+            _logFilePath = logFilePath ?? throw new ArgumentNullException(nameof(logFilePath));
             _enableConsoleOutput = enableConsoleOutput;
-            _messageQueue = new ConcurrentQueue<string>();
-            _messageEvent = new AutoResetEvent(false);
-
-            // 로그 디렉토리 생성
-            string directory = Path.GetDirectoryName(logFilePath);
-            if (!string.IsNullOrEmpty(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
-
-            // 스트림 초기화
+            _defaultLogHandler = defaultLogHandler ?? LoggerManager.GetOriginalUnityHandler();
             InitializeStream();
-
-            // 백그라운드 작성기 스레드 시작
-            _writerThread = new Thread(ProcessMessageQueue)
-            {
-                IsBackground = true,
-                Name = "LogWriterThread"
-            };
-            _writerThread.Start();
-
-            // Unity의 기본 로그 핸들러를 이 핸들러로 교체
-            Debug.unityLogger.logHandler = this;
-
-            // 로그 시작 메시지 기록
-            EnqueueMessage($"=== Log Started: {System.DateTime.Now:yyyy-MM-dd HH:mm:ss} ===\n");
         }
 
-        private void ProcessMessageQueue()
+        /// <summary>
+        /// 로그 파일의 경로를 설정합니다.
+        /// </summary>
+        /// <param name="path">새로운 로그 파일 경로</param>
+        /// <exception cref="ArgumentNullException">path가 null인 경우</exception>
+        /// <exception cref="ObjectDisposedException">이미 Dispose된 경우</exception>
+        public void SetLogPath(string path)
         {
-            while (!_isDisposed)
-            {
-                _messageEvent.WaitOne(1000); // 1초 타임아웃으로 대기
+            ThrowIfDisposed();
+            if (path == null) throw new ArgumentNullException(nameof(path));
 
-                while (!_messageQueue.IsEmpty && !_isDisposed)
+            lock (_lockObject)
+            {
+                CloseStream();
+                _logFilePath = path;
+                InitializeStream();
+            }
+        }
+
+        /// <summary>
+        /// Unity 콘솔 출력을 활성화 또는 비활성화합니다.
+        /// </summary>
+        /// <param name="enable">활성화 여부</param>
+        /// <exception cref="ObjectDisposedException">이미 Dispose된 경우</exception>
+        public void EnableConsoleOutput(bool enable)
+        {
+            ThrowIfDisposed();
+            _enableConsoleOutput = enable;
+        }
+
+        /// <summary>
+        /// 로그 메시지를 포맷팅하여 기록합니다.
+        /// </summary>
+        /// <param name="logType">로그 타입</param>
+        /// <param name="context">로그 컨텍스트</param>
+        /// <param name="format">메시지 포맷</param>
+        /// <param name="args">포맷 인자</param>
+        /// <exception cref="ObjectDisposedException">이미 Dispose된 경우</exception>
+        public void LogFormat(LogType logType, UnityEngine.Object context, string format, params object[] args)
+        {
+            ThrowIfDisposed();
+
+            string timeStamp = DateTime.Now.ToString("HH:mm:ss.fff");
+            string contextInfo = context != null ? $"[{context.name}] " : "";
+            string message = string.Format(format, args);
+            string logMessage = $"[{timeStamp}][{logType}]{contextInfo}{message}\n";
+
+            WriteToFile(logMessage);
+
+            if (_enableConsoleOutput && _defaultLogHandler != null)
+            {
+                _defaultLogHandler.LogFormat(logType, context, format, args);
+            }
+        }
+
+        /// <summary>
+        /// 예외를 로그에 기록합니다.
+        /// </summary>
+        /// <param name="exception">기록할 예외</param>
+        /// <param name="context">로그 컨텍스트</param>
+        /// <exception cref="ObjectDisposedException">이미 Dispose된 경우</exception>
+        public void LogException(Exception exception, UnityEngine.Object context)
+        {
+            ThrowIfDisposed();
+
+            string timeStamp = DateTime.Now.ToString("HH:mm:ss.fff");
+            string contextInfo = context != null ? $"[{context.name}] " : "";
+            string logMessage = $"[{timeStamp}][Exception]{contextInfo}{exception}\n{exception.StackTrace}\n";
+
+            WriteToFile(logMessage);
+
+            if (_enableConsoleOutput && _defaultLogHandler != null)
+            {
+                _defaultLogHandler.LogException(exception, context);
+            }
+        }
+
+        /// <summary>
+        /// 파일 스트림을 초기화합니다.
+        /// </summary>
+        /// <exception cref="IOException">파일 스트림 생성 실패 시</exception>
+        private void InitializeStream()
+        {
+            try
+            {
+                string directory = Path.GetDirectoryName(_logFilePath);
+                if (!string.IsNullOrEmpty(directory))
                 {
-                    if (_messageQueue.TryDequeue(out string message))
+                    Directory.CreateDirectory(directory);
+                }
+
+                _streamWriter = new StreamWriter(_logFilePath, true, Encoding.UTF8)
+                {
+                    AutoFlush = true
+                };
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Failed to initialize log file: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 파일에 로그 메시지를 기록합니다.
+        /// </summary>
+        /// <param name="message">기록할 메시지</param>
+        private void WriteToFile(string message)
+        {
+            lock (_lockObject)
+            {
+                try
+                {
+                    if (_streamWriter == null || _isDisposed)
                     {
-                        try
-                        {
-                            if (_streamWriter != null)
-                            {
-                                _streamWriter.Write(message);
-                                _streamWriter.Flush();
-                            }
-                        }
-                        catch (System.Exception e)
-                        {
-                            _defaultLogHandler.LogFormat(LogType.Error, null,
-                                "Failed to write to log file: {0}\nError: {1}", _logFilePath, e.Message);
-                            
-                            // 스트림 재초기화 시도
-                            lock (_lockObject)
-                            {
-                                CloseStream();
-                                InitializeStream();
-                            }
-                        }
+                        Debug.LogError("Stream is not available");
+                        return;
+                    }
+                    _streamWriter.Write(message);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"Failed to write to log file: {ex.Message}");
+                    
+                    // 스트림 재초기화 시도
+                    try
+                    {
+                        CloseStream();
+                        InitializeStream();
+                        _streamWriter?.Write(message);
+                    }
+                    catch (Exception retryEx)
+                    {
+                        Debug.LogError($"Failed to retry writing to log file: {retryEx.Message}");
                     }
                 }
             }
         }
 
-        private void EnqueueMessage(string message)
-        {
-            if (!_isDisposed)
-            {
-                _messageQueue.Enqueue(message);
-                _messageEvent.Set();
-            }
-        }
-
-        private void InitializeStream()
-        {
-            try
-            {
-                _fileStream = new FileStream(_logFilePath, FileMode.Append, FileAccess.Write, 
-                    FileShare.ReadWrite, 4096, FileOptions.WriteThrough);
-                _streamWriter = new StreamWriter(_fileStream, Encoding.UTF8);
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"Failed to initialize log file: {e.Message}");
-            }
-        }
-
+        /// <summary>
+        /// 스트림을 닫고 리소스를 해제합니다.
+        /// </summary>
         private void CloseStream()
         {
             _streamWriter?.Dispose();
             _streamWriter = null;
-            _fileStream?.Dispose();
-            _fileStream = null;
-        }
-
-        public void LogFormat(LogType logType, Object context, string format, params object[] args)
-        {
-            if (_isDisposed) return;
-
-            string timeStamp = System.DateTime.Now.ToString("HH:mm:ss.fff");
-            string message = string.Format(format, args);
-            string contextInfo = context != null ? $"[{context.name}] " : "";
-            string logMessage = $"[{timeStamp}][{logType}]{contextInfo}{message}\n";
-
-            if (_enableConsoleOutput)
-            {
-                _defaultLogHandler.LogFormat(logType, context, format, args);
-            }
-
-            EnqueueMessage(logMessage);
-        }
-
-        public void LogException(System.Exception exception, Object context)
-        {
-            string timeStamp = System.DateTime.Now.ToString("HH:mm:ss.fff");
-            string contextInfo = context != null ? $"[{context.name}] " : "";
-            string logMessage = $"[{timeStamp}][Exception]{contextInfo}{exception}\n{exception.StackTrace}\n";
-
-            // Unity 콘솔에 출력
-            if (_enableConsoleOutput)
-            {
-                _defaultLogHandler.LogException(exception, context);
-            }
-
-            // 파일에 기록
-            EnqueueMessage(logMessage);
         }
 
         /// <summary>
-        /// Unity 콘솔 출력 활성화 여부를 설정합니다.
+        /// 객체가 Dispose되었는지 확인하고, Dispose된 경우 예외를 발생시킵니다.
         /// </summary>
-        public bool EnableConsoleOutput
+        /// <exception cref="ObjectDisposedException">객체가 이미 Dispose된 경우</exception>
+        private void ThrowIfDisposed()
         {
-            get => _enableConsoleOutput;
-            set => _enableConsoleOutput = value;
-        }
-
-        /// <summary>
-        /// 로그 파일의 경로를 반환합니다.
-        /// </summary>
-        public string LogFilePath => _logFilePath;
-
-        /// <summary>
-        /// 로그 파일의 내용을 모두 지웁니다.
-        /// </summary>
-        public void ClearLogFile()
-        {
-            try
+            if (_isDisposed)
             {
-                CloseStream();
-                File.WriteAllText(_logFilePath, string.Empty, Encoding.UTF8);
-                InitializeStream();
-                EnqueueMessage($"=== Log Cleared: {System.DateTime.Now:yyyy-MM-dd HH:mm:ss} ===\n");
-            }
-            catch (System.Exception e)
-            {
-                _defaultLogHandler.LogFormat(LogType.Error, null, 
-                    "Failed to clear log file: {0}\nError: {1}", _logFilePath, e.Message);
+                throw new ObjectDisposedException(nameof(FileLogHandler));
             }
         }
 
         /// <summary>
-        /// 로그 파일의 전체 내용을 읽어옵니다.
+        /// 로그 핸들러의 리소스를 정리합니다.
         /// </summary>
-        public string ReadLogFile()
+        public void Cleanup()
         {
-            try
-            {
-                // 현재 버퍼의 내용을 파일에 쓰기
-                _streamWriter?.Flush();
-
-                // 파일 읽기
-                return File.Exists(_logFilePath) 
-                    ? File.ReadAllText(_logFilePath, Encoding.UTF8) 
-                    : string.Empty;
-            }
-            catch (System.Exception e)
-            {
-                _defaultLogHandler.LogFormat(LogType.Error, null, 
-                    "Failed to read log file: {0}\nError: {1}", _logFilePath, e.Message);
-                return string.Empty;
-            }
+            Dispose();
         }
 
+        /// <summary>
+        /// 관리되지 않는 리소스를 해제하고 정리합니다.
+        /// </summary>
         public void Dispose()
         {
             if (_isDisposed) return;
 
-            _isDisposed = true;
-            
-            // Unity의 기본 로그 핸들러 복원
-            Debug.unityLogger.logHandler = _defaultLogHandler;
-            
-            _messageEvent.Set(); // 스레드 깨우기
-            _writerThread.Join(2000); // 최대 2초 대기
-            
             lock (_lockObject)
             {
-                CloseStream();
+                if (!_isDisposed)
+                {
+                    _isDisposed = true;
+                    CloseStream();
+                }
             }
-            
-            _messageEvent.Dispose();
+
+            GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// 종료자입니다.
+        /// </summary>
         ~FileLogHandler()
         {
             Dispose();
