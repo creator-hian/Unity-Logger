@@ -1,4 +1,51 @@
-# 변경 로그
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+## 버전 관리 정책
+
+이 프로젝트는 Semantic Versioning을 따릅니다:
+
+- **Major.Minor.Patch** 형식
+  - **Major**: 호환성이 깨지는 변경
+  - **Minor**: 하위 호환성 있는 기능 추가
+  - **Patch**: 하위 호환성 있는 버그 수정
+
+## [0.1.0] - 2024-12-11
+
+### Added
+
+- 진단 로깅 시스템 구현
+  - System.Diagnostics 기반의 로깅 지원
+  - 시스템별 독립적인 로거 관리
+  - 커스텀 TraceListener 지원
+  - 기본 진단 로거 제공
+
+### Changed
+
+- LoggerManager에서 원본 Unity 로그 핸들러 관리 방식 개선
+  - 원본 핸들러를 readonly 필드로 보관
+  - GetOriginalUnityHandler 메서드 추가
+- FileLogHandler의 기본 핸들러 참조 방식 변경
+  - 항상 원본 Unity 핸들러를 사용하도록 수정
+  - 핸들러 체인 형성 방지
+- 로거 관리 시스템 개선
+  - Unity 로깅과 진단 로깅 분리
+  - 시스템별 로거 생성/관리 API 추가
+  - Factory 패턴 적용
+
+### Fixed
+
+- LogFileUtility의 파일 필터링 로직 개선
+  - 로그 파일 패턴 검사 강화
+  - 대소문자 구분 없는 확장자 비교 추가
+- FileLogHandler의 null 체크 로직 개선
+- 테스트 코드의 파일 정리 로직 강화
+
+### Removed
+
+- LoggerManager에서 SetupFileHandler 메서드 제거
+  - Factory 패턴을 통한 핸들러 생성으로 대체
 
 ## [0.0.2] - 2024-12-05
 

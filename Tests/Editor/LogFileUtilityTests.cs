@@ -3,6 +3,7 @@ using UnityEngine;
 using System.IO;
 using System;
 using Hian.Logger;
+using Hian.Logger.Utilities;
 
 public class LogFileUtilityTests
 {
@@ -13,6 +14,12 @@ public class LogFileUtilityTests
     public void Setup()
     {
         _testDirectory = Path.Combine(Application.temporaryCachePath, "TestLogs");
+        
+        // 테스트 디렉토리 초기화
+        if (Directory.Exists(_testDirectory))
+        {
+            Directory.Delete(_testDirectory, true);
+        }
         Directory.CreateDirectory(_testDirectory);
         
         // 원래 디렉토리 저장 및 테스트 디렉토리 설정
@@ -26,9 +33,17 @@ public class LogFileUtilityTests
         // 원래 디렉토리 복원
         LogFileUtility.DefaultLogDirectory = _originalLogDirectory;
 
+        // 테스트 디렉토리 정리
         if (Directory.Exists(_testDirectory))
         {
-            Directory.Delete(_testDirectory, true);
+            try
+            {
+                Directory.Delete(_testDirectory, true);
+            }
+            catch (IOException)
+            {
+                // 파일이 잠겨있을 수 있으므로 무시
+            }
         }
     }
 
@@ -42,13 +57,17 @@ public class LogFileUtilityTests
         string oldFile = Path.Combine(_testDirectory, $"log_{oldDate:yyyy-MM-dd}.txt");
         string newFile = Path.Combine(_testDirectory, $"log_{now:yyyy-MM-dd}.txt");
         
-        // 파일 생성 및 생성 시간 설정
+        // 파일 생성
         File.WriteAllText(oldFile, "Old log");
         File.WriteAllText(newFile, "New log");
         
-        // 파일 생성 시간 설정
-        File.SetCreationTime(oldFile, oldDate);
-        File.SetCreationTime(newFile, now);
+        // 파일 시간 설정 (LastWriteTime 사용)
+        File.SetLastWriteTime(oldFile, oldDate);
+        File.SetLastWriteTime(newFile, now);
+
+        // 파일 존재 확인
+        Assert.IsTrue(File.Exists(oldFile), "Old file should exist before deletion");
+        Assert.IsTrue(File.Exists(newFile), "New file should exist before deletion");
 
         // Act
         int deletedCount = LogFileUtility.DeleteOldLogs(7);
@@ -136,6 +155,12 @@ public class LogFileUtilityTests
 
         string nonLogFile = Path.Combine(_testDirectory, "notALogFile.txt");
 
+        // 테스트 파일 생성 전 디렉토리 정리
+        foreach (var file in Directory.GetFiles(_testDirectory))
+        {
+            File.Delete(file);
+        }
+
         // 테스트 파일 생성
         foreach (string file in logFiles)
         {
@@ -147,14 +172,11 @@ public class LogFileUtilityTests
         FileInfo[] result = LogFileUtility.GetLogFiles();
 
         // Assert
-        Assert.AreEqual(logFiles.Length, result.Length, 
-            "Should return only log files");
+        Assert.AreEqual(logFiles.Length, result.Length, "Should return only log files");
         foreach (var file in result)
         {
-            Assert.IsTrue(file.Name.StartsWith("log_"), 
-                "Should only include files starting with 'log_'");
-            Assert.IsTrue(file.Name.EndsWith(".txt"), 
-                "Should only include .txt files");
+            Assert.IsTrue(file.Name.StartsWith("log_"), "Should only include files starting with 'log_'");
+            Assert.IsTrue(file.Name.EndsWith(".txt"), "Should only include .txt files");
         }
     }
 }
