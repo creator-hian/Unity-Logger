@@ -7,6 +7,11 @@ Unity의 기본 로깅 시스템을 확장한 고급 로깅 패키지입니다.
 Unity의 기본 로깅 시스템을 확장하여 파일 로깅 기능과 로그 파일 관리 기능을 제공합니다.
 스레드 안전한 로깅을 지원하며, 날짜별 자동 파일 생성과 관리 기능을 포함합니다.
 
+## 요구사항
+
+- Unity 2021.3 이상
+- .NET Standard 2.1
+
 ## 주요 기능
 
 - Unity의 기본 로깅 시스템 확장
@@ -93,18 +98,31 @@ Debug.LogError("에러 메시지");
 ### 파일 로깅 설정
 
 ```csharp
+// 파일 로그 핸들러 팩토리 생성
+var factory = new FileLogHandlerFactory();
+
 // 기본 경로에 파일 로깅 설정 (Application.persistentDataPath/Logs/log_yyyy-MM-dd.txt)
-LoggerManager.SetupFileHandler();
+var handler = factory.CreateHandler();
+LoggerManager.SetHandler(handler);
 
 // 사용자 지정 경로에 파일 로깅 설정
-LoggerManager.SetupFileHandler("CustomLogs/mylog.txt");
+var customHandler = factory.CreateHandler("CustomLogs/mylog.txt");
+LoggerManager.SetHandler(customHandler);
 
 // Unity 콘솔 출력 비활성화하고 파일에만 로깅
-LoggerManager.SetupFileHandler(enableConsoleOutput: false);
+var fileOnlyHandler = factory.CreateHandler(enableConsoleOutput: false);
+LoggerManager.SetHandler(fileOnlyHandler);
 
-// 기본 로거로 복원
+// 기본 Unity 로거로 복원
 LoggerManager.ResetToDefaultHandler();
 ```
+
+주요 특징:
+- Factory 패턴을 통한 핸들러 생성
+- 자동 경로 검증 및 디렉토리 생성
+- 잘못된 경로 지정 시 기본 경로 사용
+- 스레드 안전한 파일 접근
+- 자동 파일 정리 및 복구
 
 ### 로그 파일 관리
 
@@ -138,6 +156,88 @@ private void OnApplicationQuit()
 - 로그 파일은 .txt 형식으로 저장됩니다.
 - 파일명 형식: log_yyyy-MM-dd.txt (날짜별 자동 생성)
 - 같은 날짜에 여러 파일 생성 시 자동으로 번호가 붙습니다 (예: log_2024-01-20_1.txt)
+
+### 진단 로깅 (Diagnostics Logger)
+
+시스템별로 독립적인 로그 파일을 생성하고 관리할 수 있는 진단 로깅 기능을 제공합니다.
+
+#### 기본 사용법
+
+```csharp
+// 진단 로거 생성
+string systemName = "MySystem";
+IDiagnosticsLogger logger = LoggerManager.CreateDiagnosticsLogger(systemName);
+
+// 로그 기록
+logger.Log("일반 메시지");
+logger.LogWarning("경고 메시지");
+logger.LogError("에러 메시지");
+logger.LogException(exception);
+
+// Assert 기능
+logger.Assert(condition, "조건이 false일 때 기록될 메시지");
+logger.AssertOrThrow(condition, "조건이 false일 때 예외 발생");
+
+// 수동으로 버퍼 플러시
+logger.Flush();
+
+// 사용 완료 후 정리
+logger.Cleanup();
+```
+
+#### 커스텀 디렉토리 설정
+
+```csharp
+// 사용자 지정 디렉토리에 로그 파일 생성
+string customDirectory = "CustomLogs/Diagnostics";
+var logger = LoggerManager.CreateDiagnosticsLogger("MySystem", customDirectory);
+```
+
+#### 진단 로거 관리
+
+```csharp
+// 기존 로거 가져오기
+var logger = LoggerManager.GetDiagnosticsLogger("MySystem");
+
+// 로거 존재 여부 확인
+bool exists = LoggerManager.HasDiagnosticsLogger("MySystem");
+
+// 특정 로거 제거
+LoggerManager.RemoveDiagnosticsLogger("MySystem");
+
+// 모든 로거 정리
+LoggerManager.Cleanup();
+```
+
+#### 주요 특징
+
+- 시스템별 독립적인 로그 파일 관리
+- 스레드 안전한 로깅
+- 자동 버퍼 관리 (설정 가능한 임계값)
+- Assert 기능 내장
+- System.Diagnostics.TraceSource 기반 구현
+- 커스텀 TraceListener 지원
+
+### 디버그 로그 설정
+
+로거의 내부 동작을 디버깅하기 위한 로그를 활성화할 수 있습니다.
+
+#### 스크립팅 심볼을 통한 설정
+
+Project Settings > Player > Scripting Define Symbols에 다음 심볼을 추가:
+
+- `ENABLE_LOGGER_DEBUG`: 로거의 디버그 로그 활성화
+- `DEVELOPMENT_BUILD`: Development Build 시 자동으로 디버그 로그 활성화
+
+#### 코드를 통한 제어
+
+```csharp
+// 수동으로 디버그 로그 활성화/비활성화
+LoggerManager.IsDebugLogEnabled = true;  // 활성화
+LoggerManager.IsDebugLogEnabled = false; // 비활성화
+```
+
+디버그 로그가 활성화되면 로거의 내부 동작(파일 생성, 디렉토리 생성 등)이 Unity 콘솔에 출력됩니다.
 
 ## 원작성자
 

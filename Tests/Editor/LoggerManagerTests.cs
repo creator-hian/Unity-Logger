@@ -6,12 +6,15 @@ using System.Threading;
 using Hian.Logger;
 using System.Text;
 using System;
+using Hian.Logger.Utilities;  // LogFileUtility를 위한 참조
+using Hian.Logger.Handlers.Factories;  // FileLogHandlerFactory를 위한 참조
 
 public class LoggerManagerTests
 {
     private string _testLogPath;
     private const int WaitTimeMs = 500;
     private const int MaxRetries = 5;
+    private readonly ILogHandlerFactory _fileLogHandlerFactory = new FileLogHandlerFactory();
 
     [SetUp]
     public void Setup()
@@ -66,18 +69,16 @@ public class LoggerManagerTests
     }
 
     [Test]
-    public void SetupFileHandler_CreatesLogFile()
+    public void SetHandler_WithFileHandler_CreatesLogFile()
     {
         // Arrange
         Assert.IsFalse(File.Exists(_testLogPath));
 
         // Act
-        LoggerManager.SetupFileHandler(_testLogPath);
+        var handler = _fileLogHandlerFactory.CreateHandler(_testLogPath);
+        LoggerManager.SetHandler(handler);
         LogAssert.Expect(LogType.Log, "Test message");
         Debug.Log("Test message");
-
-        // 파일 쓰기가 완료될 때까지 대기
-        Thread.Sleep(WaitTimeMs);
 
         // Assert
         Assert.IsTrue(File.Exists(_testLogPath));
@@ -86,11 +87,25 @@ public class LoggerManagerTests
     }
 
     [Test]
+    public void SetHandler_WithFileHandler_WithoutPath_CreatesLogFileInDefaultLocation()
+    {
+        // Act
+        var handler = _fileLogHandlerFactory.CreateHandler();
+        LoggerManager.SetHandler(handler);
+        Debug.Log("Default path test");
+
+        // Assert
+        var logFiles = LogFileUtility.GetLogFiles();
+        Assert.IsTrue(logFiles.Length > 0);
+    }
+
+    [Test]
     public void ResetToDefaultHandler_RestoresOriginalHandler()
     {
         // Arrange
         var originalHandler = Debug.unityLogger.logHandler;
-        LoggerManager.SetupFileHandler(_testLogPath);
+        var handler = _fileLogHandlerFactory.CreateHandler(_testLogPath);
+        LoggerManager.SetHandler(handler);
 
         // Act
         LoggerManager.ResetToDefaultHandler();
@@ -100,22 +115,11 @@ public class LoggerManagerTests
     }
 
     [Test]
-    public void SetupFileHandler_WithoutPath_CreatesLogFileInDefaultLocation()
-    {
-        // Act
-        var handler = LoggerManager.SetupFileHandler();
-        Debug.Log("Default path test");
-
-        // Assert
-        var logFiles = LogFileUtility.GetLogFiles();
-        Assert.IsTrue(logFiles.Length > 0);
-    }
-
-    [Test]
     public void MultipleLogMessages_AreWrittenToFile()
     {
         // Arrange
-        LoggerManager.SetupFileHandler(_testLogPath);
+        var handler = _fileLogHandlerFactory.CreateHandler(_testLogPath);
+        LoggerManager.SetHandler(handler);
 
         // 예상되는 로그 메시지 설정
         LogAssert.Expect(LogType.Log, "Message 1");
@@ -149,10 +153,13 @@ public class LoggerManagerTests
     {
         // Arrange
         string invalidPath = "\\\\invalid:path";
-        LogAssert.Expect(LogType.Warning, new System.Text.RegularExpressions.Regex("Invalid log file path.*"));
+        
+        // 에러 로그 예상
+        LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("Failed to create file handler.*"));
 
         // Act
-        var handler = LoggerManager.SetupFileHandler(invalidPath);
+        var handler = _fileLogHandlerFactory.CreateHandler(invalidPath);
+        LoggerManager.SetHandler(handler);
         Debug.Log("Test message");
 
         // Assert
