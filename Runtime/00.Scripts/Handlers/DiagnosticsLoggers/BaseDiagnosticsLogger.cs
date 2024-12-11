@@ -30,7 +30,7 @@ namespace Hian.Logger.Handlers.DiagnosticsLoggers
         /// <param name="flushThreshold">자동 플러시를 위한 메시지 수 임계값 (0 이하면 자동 플러시 비활성화)</param>
         public virtual void Initialize(string sourceName, string logDirectory = null, int flushThreshold = 100)
         {
-            UnityEngine.Debug.Log($"Initializing logger with directory: {logDirectory ?? "null"}, flushThreshold: {flushThreshold}");
+            LoggerManager.DebugLog($"Initializing logger with directory: {logDirectory ?? "null"}, flushThreshold: {flushThreshold}");
 
             LogDirectory = logDirectory ?? Path.Combine(Application.persistentDataPath, "Diagnostics");
             _flushThreshold = flushThreshold;
