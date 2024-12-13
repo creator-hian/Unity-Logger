@@ -20,6 +20,7 @@ Unity의 기본 로깅 시스템을 확장하여 파일 로깅 기능과 로그 
 - 로그 파일 관리 기능 (날짜별 삭제, 일괄 삭제 등)
 - 잘못된 경로 자동 처리
 - 로그 파일 자동 정리
+- 조건부 디버그 로깅 기능
 
 ## 설치 방법
 
@@ -66,7 +67,7 @@ https://github.com/creator-hian/Unity-Logger.git
 ```json
 {
   "dependencies": {
-    "com.creator-hian.unity.logger": "https://github.com/creator-hian/Unity-Logger.git#0.0.1",
+    "com.creator-hian.unity.logger": "https://github.com/creator-hian/Unity-Logger.git#0.2.0",
     ...
   }
 }
@@ -238,6 +239,20 @@ LoggerManager.IsDebugLogEnabled = false; // 비활성화
 ```
 
 디버그 로그가 활성화되면 로거의 내부 동작(파일 생성, 디렉토리 생성 등)이 Unity 콘솔에 출력됩니다.
+
+### 조건부 디버그 로깅
+
+`LoggerManager`를 통해 조건부 디버그 로그를 출력할 수 있습니다.
+
+```csharp
+// 조건부 디버그 로그 출력
+LoggerManager.LogConditionalDebug("디버그 로그 메시지");
+LoggerManager.LogConditionalDebugWarning("디버그 경고 메시지");
+LoggerManager.LogConditionalDebugError("디버그 에러 메시지");
+```
+
+`LoggerManager.IsDebugLogEnabled` 속성을 통해 디버그 로그를 활성화/비활성화할 수 있습니다.
+`DEVELOPMENT_BUILD` 스크립팅 심볼이 정의되어 있으면 개발 빌드에서 자동으로 디버그 로그가 활성화됩니다.
 
 ## 원작성자
 

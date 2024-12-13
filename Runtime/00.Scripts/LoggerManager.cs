@@ -9,24 +9,29 @@ namespace Hian.Logger
     /// Unity 로깅 시스템을 관리하는 정적 클래스입니다.
     /// 로그 핸들러의 생명주기와 설정을 관리합니다.
     /// </summary>
-    public static class LoggerManager
+    public static partial class LoggerManager
     {
         private static readonly UnityEngine.ILogHandler _originalUnityHandler;
         private static UnityEngine.ILogHandler _defaultHandler;
         private static ILogHandler _currentHandler;
         private static readonly Dictionary<string, IDiagnosticsLogger> _diagnosticsLoggers = new();
         private static bool _isDebugLogEnabled = false;
+        private static readonly IConditionalLogger _conditionalLogger = new ConditionalLogger();
+
+        /// <summary>
+        /// 디버그 로그 활성화 여부를 설정하거나 가져옵니다.
+        /// </summary>
+        public static bool IsDebugLogEnabled
+        {
+            get => _isDebugLogEnabled;
+            set => _isDebugLogEnabled = value;
+        }
 
         static LoggerManager()
         {
             _originalUnityHandler = Debug.unityLogger.logHandler;
             _defaultHandler = _originalUnityHandler;
             _currentHandler = null;
-
-            // 스크립팅 심볼에 따라 디버그 로그 활성화
-#if DEVELOPMENT_BUILD || ENABLE_LOGGER_DEBUG
-            IsDebugLogEnabled = true;
-#endif
         }
 
         /// <summary>
@@ -155,6 +160,36 @@ namespace Hian.Logger
         #endregion
 
         /// <summary>
+        /// 조건부 디버그 로그를 출력합니다.
+        /// </summary>
+        /// <param name="message">로그 메시지</param>
+        public static void LogConditionalDebug(string message)
+        {
+            if (!_isDebugLogEnabled) return;
+            _conditionalLogger.LogConditionalDebug(message);
+        }
+
+        /// <summary>
+        /// 조건부 디버그 경고 로그를 출력합니다.
+        /// </summary>
+        /// <param name="message">로그 메시지</param>
+        public static void LogConditionalDebugWarning(string message)
+        {
+            if (!_isDebugLogEnabled) return;
+            _conditionalLogger.LogConditionalDebugWarning(message);
+        }
+
+        /// <summary>
+        /// 조건부 디버그 에러 로그를 출력합니다.
+        /// </summary>
+        /// <param name="message">로그 메시지</param>
+        public static void LogConditionalDebugError(string message)
+        {
+            if (!_isDebugLogEnabled) return;
+            _conditionalLogger.LogConditionalDebugError(message);
+        }
+
+        /// <summary>
         /// 애플리케이션 종료 시 로깅 시스템의 정리 작업을 수행합니다.
         /// </summary>
         public static void Cleanup()
@@ -169,42 +204,6 @@ namespace Hian.Logger
         public static UnityEngine.ILogHandler GetOriginalUnityHandler()
         {
             return _originalUnityHandler;
-        }
-
-        /// <summary>
-        /// 디버그 로그 활성화 여부를 설정합니다.
-        /// </summary>
-        public static bool IsDebugLogEnabled
-        {
-            get => _isDebugLogEnabled;
-            set => _isDebugLogEnabled = value;
-        }
-
-        /// <summary>
-        /// 디버그 로그를 출력합니다. IsDebugLogEnabled가 true인 경우에만 동작합니다.
-        /// </summary>
-        internal static void DebugLog(string message)
-        {
-            if (_isDebugLogEnabled)
-            {
-                Debug.Log($"[Logger] {message}");
-            }
-        }
-
-        internal static void DebugLogWarning(string message)
-        {
-            if (_isDebugLogEnabled)
-            {
-                Debug.LogWarning($"[Logger] {message}");
-            }
-        }
-
-        internal static void DebugLogError(string message)
-        {
-            if (_isDebugLogEnabled)
-            {
-                Debug.LogError($"[Logger] {message}");
-            }
         }
     }
 }
