@@ -32,6 +32,24 @@
 - **Warning Log**: 경고 레벨 로그 기록 테스트
 - **Error Log**: 에러 레벨 로그 기록 테스트
 
+## ConditionalLogger 관련 테스트
+
+### ConditionalLoggerTests.cs
+
+- **WithDevelopmentBuild**: Development Build 환경에서 로그 출력 테스트
+- **WithoutDevelopmentBuild**: 일반 빌드 환경에서 로그 미출력 테스트
+- **LogConditionalDebugWarning**: 경고 레벨 조건부 로그 테스트
+- **LogConditionalDebugError**: 에러 레벨 조건부 로그 테스트
+
+### LoggerManagerConditionalTests.cs
+
+- **InDevelopmentBuild**: Development Build 환경에서 LoggerManager를 통한 로그 출력 테스트
+- **WhenDebugDisabled**: 디버그 로그 비활성화 시 로그 미출력 테스트
+- **WhenDebugEnabled**: 디버그 로그 활성화 시 로그 출력 테스트
+- **DebugWarning**: 경고 레벨 조건부 로그 테스트
+- **DebugError**: 에러 레벨 조건부 로그 테스트
+- **IsDebugLogEnabled**: 디버그 로그 활성화/비활성화 토글 테스트
+
 ## LogFileUtility 관련 테스트
 
 ### LogFileUtilityTests.cs

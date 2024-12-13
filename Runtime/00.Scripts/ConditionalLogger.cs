@@ -8,6 +8,17 @@ namespace Hian.Logger
     public class ConditionalLogger : IConditionalLogger
     {
         private static readonly UnityEngine.ILogger _originalUnityLogger = Debug.unityLogger;
+        private bool _isEditorOrDevelopmentBuild = false;
+
+        public ConditionalLogger(bool? isEditorOrDevelopmentBuild = null)
+        {
+            _isEditorOrDevelopmentBuild = isEditorOrDevelopmentBuild ?? 
+                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                true;
+                #else
+                false;
+                #endif
+        }
 
         /// <summary>
         /// 조건부 디버그 로그를 출력합니다.
@@ -15,10 +26,10 @@ namespace Hian.Logger
         /// <param name="message">로그 메시지</param>
         public void LogConditionalDebug(string message)
         {
-
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            _originalUnityLogger.Log(LogType.Log, message);
-#endif
+            if (_isEditorOrDevelopmentBuild)
+            {
+                _originalUnityLogger.Log(LogType.Log, message);
+            }
         }
 
         /// <summary>
@@ -27,10 +38,10 @@ namespace Hian.Logger
         /// <param name="message">로그 메시지</param>
         public void LogConditionalDebugWarning(string message)
         {
-
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            _originalUnityLogger.Log(LogType.Warning, message);
-#endif
+            if (_isEditorOrDevelopmentBuild)
+            {
+                _originalUnityLogger.Log(LogType.Warning, message);
+            }
         }
 
         /// <summary>
@@ -39,10 +50,10 @@ namespace Hian.Logger
         /// <param name="message">로그 메시지</param>
         public void LogConditionalDebugError(string message)
         {
-
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            _originalUnityLogger.Log(LogType.Error, message);
-#endif
+            if (_isEditorOrDevelopmentBuild)
+            {
+                _originalUnityLogger.Log(LogType.Error, message);
+            }
         }
     }
 }
