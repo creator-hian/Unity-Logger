@@ -12,6 +12,24 @@ All notable changes to this project will be documented in this file.
   - **Patch**: 하위 호환성 있는 버그 수정
 - **최신 버전이 상단에, 이전 버전이 하단에 기록됩니다.**
 
+## [0.2.0] - 2024-12-13
+
+### Added
+
+- 조건부 디버그 로깅 기능 추가
+  - `IConditionalLogger` 인터페이스 및 `ConditionalLogger` 클래스 구현
+  - `LoggerManager`에서 `IsDebugLogEnabled` 속성을 통해 디버그 로그 활성화/비활성화 제어
+  - `DEVELOPMENT_BUILD` 스크립팅 심볼을 통한 자동 활성화
+  - `LogConditionalDebug`, `LogConditionalDebugWarning`, `LogConditionalDebugError` 메서드 추가
+
+### Changed
+
+- `LoggerManager`에서 `_conditionalLogger` 인스턴스 관리 방식 변경
+- `LoggerManager`에서 `ConditionalLog` 메서드 호출 방식 변경
+  - `IConditionalLogger` 인터페이스를 통해 호출하도록 변경
+
+### Removed
+
 ## [0.1.1] - 2024-12-12
 
 ### Added

@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics;
-using UnityEngine;
 using System.IO;
 
 namespace Hian.Logger.Handlers.DiagnosticsLoggers
@@ -30,13 +29,13 @@ namespace Hian.Logger.Handlers.DiagnosticsLoggers
             try
             {
                 string logPath = GetLogFilePath(SystemName);
-                LoggerManager.DebugLog($"Configuring listener for path: {logPath}");
+                LoggerManager.LogConditionalDebug($"Configuring listener for path: {logPath}");
 
                 string directory = Path.GetDirectoryName(logPath);
                 if (!string.IsNullOrEmpty(directory))
                 {
                     Directory.CreateDirectory(directory);
-                    LoggerManager.DebugLog($"Created directory: {directory}");
+                    LoggerManager.LogConditionalDebug($"Created directory: {directory}");
                 }
 
                 var textListener = new TextWriterTraceListener(logPath)
@@ -46,12 +45,12 @@ namespace Hian.Logger.Handlers.DiagnosticsLoggers
                 
                 TraceSource.Listeners.Add(textListener);
                 TraceSource.Switch.Level = SourceLevels.All;
-                LoggerManager.DebugLog($"Added listener for: {logPath}");
+                LoggerManager.LogConditionalDebug($"Added listener for: {logPath}");
                 TraceSource.Flush();
             }
             catch (Exception ex)
             {
-                LoggerManager.DebugLogError($"Failed to configure listener: {ex.Message}");
+                UnityEngine.Debug.LogError($"Failed to configure listener: {ex.Message}");
                 throw;
             }
         }
