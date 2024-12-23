@@ -12,12 +12,12 @@ namespace Hian.Logger
 
         public ConditionalLogger(bool? isEditorOrDevelopmentBuild = null)
         {
-            _isEditorOrDevelopmentBuild = isEditorOrDevelopmentBuild ?? 
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            _isEditorOrDevelopmentBuild = isEditorOrDevelopmentBuild ??
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 true;
-                #else
+#else
                 false;
-                #endif
+#endif
         }
 
         /// <summary>

@@ -32,22 +32,28 @@ All notable changes to this project will be documented in this file.
 
 ## [0.1.1] - 2024-12-12
 
+<!-- markdownlint-disable MD024 -->
 ### Added
+<!-- markdownlint-enable MD024 -->
 
 - 디버그 로그 기능 추가
   - 스크립팅 심볼을 통한 디버그 로그 제어 (`ENABLE_LOGGER_DEBUG`)
   - Development Build 시 자동 활성화
   - 런타임에서 수동 제어 가능
   - 로거 내부 동작 추적을 위한 상세 로깅
-
+  
+<!-- markdownlint-disable MD024 -->
 ### Changed
+<!-- markdownlint-enable MD024 -->
 
 - DefaultDiagnosticsLogger의 디버그 메시지를 중앙 관리 방식으로 변경
 - 로거 초기화 및 정리 과정의 가시성 개선
 
 ## [0.1.0] - 2024-12-11
 
+<!-- markdownlint-disable MD024 -->
 ### Added
+<!-- markdownlint-enable MD024 -->
 
 - 진단 로깅 시스템 구현
   - System.Diagnostics 기반의 로깅 지원
@@ -55,7 +61,9 @@ All notable changes to this project will be documented in this file.
   - 커스텀 TraceListener 지원
   - 기본 진단 로거 제공
 
+<!-- markdownlint-disable MD024 -->
 ### Changed
+<!-- markdownlint-enable MD024 -->
 
 - LoggerManager에서 원본 Unity 로그 핸들러 관리 방식 개선
   - 원본 핸들러를 readonly 필드로 보관
@@ -76,7 +84,9 @@ All notable changes to this project will be documented in this file.
 - FileLogHandler의 null 체크 로직 개선
 - 테스트 코드의 파일 정리 로직 강화
 
+<!-- markdownlint-disable MD024 -->
 ### Removed
+<!-- markdownlint-enable MD024 -->
 
 - LoggerManager에서 SetupFileHandler 메서드 제거
   - Factory 패턴을 통한 핸들러 생성으로 대체
@@ -96,7 +106,9 @@ All notable changes to this project will be documented in this file.
 
 ## [0.0.1] - 2024-11-30
 
+<!-- markdownlint-disable MD024 -->
 ### 추가
+<!-- markdownlint-enable MD024 -->
 
 - Unity 기본 로깅 시스템 확장 구현
 - 파일 로깅 기능

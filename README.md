@@ -43,9 +43,11 @@ Unity의 기본 로깅 시스템을 확장하여 파일 로깅 기능과 로그 
 https://github.com/creator-hian/Unity-Logger.git
 ```
 
+<!-- markdownlint-disable MD029 -->
 4. 'Add' 버튼을 클릭합니다.
 
    ![Package Manager Add Button](https://i.imgur.com/yIiD4tT.png)
+<!-- markdownlint-enable MD029 -->
 
 #### 설치 방법 2: manifest.json 직접 수정
 
@@ -119,6 +121,7 @@ LoggerManager.ResetToDefaultHandler();
 ```
 
 주요 특징:
+
 - Factory 패턴을 통한 핸들러 생성
 - 자동 경로 검증 및 디렉토리 생성
 - 잘못된 경로 지정 시 기본 경로 사용
