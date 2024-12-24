@@ -1,7 +1,7 @@
 using System;
-using Debug = UnityEngine.Debug;
 using System.Collections.Generic;
 using Hian.Logger.Handlers.DiagnosticsLoggers;
+using Debug = UnityEngine.Debug;
 
 namespace Hian.Logger
 {
@@ -48,12 +48,9 @@ namespace Hian.Logger
         /// <exception cref="ArgumentNullException">handler가 null인 경우</exception>
         public static void SetHandler(ILogHandler handler)
         {
-            if (handler == null)
-                throw new ArgumentNullException(nameof(handler));
-
             // 이전 핸들러 정리
             CleanupCurrentHandler();
-            _currentHandler = handler;
+            _currentHandler = handler ?? throw new ArgumentNullException(nameof(handler));
             Debug.unityLogger.logHandler = handler;
         }
 
@@ -88,7 +85,9 @@ namespace Hian.Logger
         /// <returns>등록된 진단 로거 또는 null</returns>
         public static IDiagnosticsLogger GetDiagnosticsLogger(string system)
         {
-            return _diagnosticsLoggers.TryGetValue(system, out var logger) ? logger : null;
+            return _diagnosticsLoggers.TryGetValue(system, out IDiagnosticsLogger logger)
+                ? logger
+                : null;
         }
 
         /// <summary>
@@ -100,16 +99,19 @@ namespace Hian.Logger
         /// <returns>생성된 진단 로거</returns>
         /// <exception cref="InvalidOperationException">이미 해당 시스템의 로거가 존재하는 경우</exception>
         public static IDiagnosticsLogger CreateDiagnosticsLogger(
-            string system, 
-            string logDirectory = null, 
-            IDiagnosticsLogger logger = null)
+            string system,
+            string logDirectory = null,
+            IDiagnosticsLogger logger = null
+        )
         {
             if (_diagnosticsLoggers.ContainsKey(system))
             {
-                throw new InvalidOperationException($"Logger for system '{system}' already exists.");
+                throw new InvalidOperationException(
+                    $"Logger for system '{system}' already exists."
+                );
             }
 
-            var newLogger = logger ?? new DefaultDiagnosticsLogger();
+            IDiagnosticsLogger newLogger = logger ?? new DefaultDiagnosticsLogger();
             newLogger.Initialize(system, logDirectory);
             _diagnosticsLoggers[system] = newLogger;
             return newLogger;
@@ -128,7 +130,7 @@ namespace Hian.Logger
         /// </summary>
         private static void CleanupDiagnosticsLoggers()
         {
-            foreach (var logger in _diagnosticsLoggers.Values)
+            foreach (IDiagnosticsLogger logger in _diagnosticsLoggers.Values)
             {
                 logger.Cleanup();
             }
@@ -142,14 +144,16 @@ namespace Hian.Logger
         public static void RemoveDiagnosticsLogger(string system)
         {
             if (string.IsNullOrEmpty(system))
+            {
                 return;
+            }
 
             IDiagnosticsLogger logger = null;
             lock (_diagnosticsLoggers)
             {
                 if (_diagnosticsLoggers.TryGetValue(system, out logger))
                 {
-                    _diagnosticsLoggers.Remove(system);
+                    _ = _diagnosticsLoggers.Remove(system);
                 }
             }
 
@@ -165,7 +169,11 @@ namespace Hian.Logger
         /// <param name="message">로그 메시지</param>
         public static void LogConditionalDebug(string message)
         {
-            if (!_isDebugLogEnabled) return;
+            if (!_isDebugLogEnabled)
+            {
+                return;
+            }
+
             _conditionalLogger.LogConditionalDebug(message);
         }
 
@@ -175,7 +183,11 @@ namespace Hian.Logger
         /// <param name="message">로그 메시지</param>
         public static void LogConditionalDebugWarning(string message)
         {
-            if (!_isDebugLogEnabled) return;
+            if (!_isDebugLogEnabled)
+            {
+                return;
+            }
+
             _conditionalLogger.LogConditionalDebugWarning(message);
         }
 
@@ -185,7 +197,11 @@ namespace Hian.Logger
         /// <param name="message">로그 메시지</param>
         public static void LogConditionalDebugError(string message)
         {
-            if (!_isDebugLogEnabled) return;
+            if (!_isDebugLogEnabled)
+            {
+                return;
+            }
+
             _conditionalLogger.LogConditionalDebugError(message);
         }
 

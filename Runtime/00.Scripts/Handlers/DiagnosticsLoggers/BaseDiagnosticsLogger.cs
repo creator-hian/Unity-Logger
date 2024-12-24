@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
-using UnityEngine;
 using System.IO;
+using UnityEngine;
 
 namespace Hian.Logger.Handlers.DiagnosticsLoggers
 {
@@ -15,7 +15,7 @@ namespace Hian.Logger.Handlers.DiagnosticsLoggers
         /// 로그 기록에 사용되는 TraceSource 인스턴스입니다.
         /// </summary>
         protected TraceSource TraceSource { get; private set; }
-        
+
         protected string LogDirectory { get; private set; }
 
         private int _messageCount;
@@ -28,20 +28,27 @@ namespace Hian.Logger.Handlers.DiagnosticsLoggers
         /// <param name="sourceName">로그 소스의 이름</param>
         /// <param name="logDirectory">로그 파일을 저장할 디렉토리 (null인 경우 기본 디렉토리 사용)</param>
         /// <param name="flushThreshold">자동 플러시를 위한 메시지 수 임계값 (0 이하면 자동 플러시 비활성화)</param>
-        public virtual void Initialize(string sourceName, string logDirectory = null, int flushThreshold = 100)
+        public virtual void Initialize(
+            string sourceName,
+            string logDirectory = null,
+            int flushThreshold = 100
+        )
         {
-            LoggerManager.LogConditionalDebug($"Initializing logger with directory: {logDirectory ?? "null"}, flushThreshold: {flushThreshold}");
+            LoggerManager.LogConditionalDebug(
+                $"Initializing logger with directory: {logDirectory ?? "null"}, flushThreshold: {flushThreshold}"
+            );
 
-            LogDirectory = logDirectory ?? Path.Combine(Application.persistentDataPath, "Diagnostics");
+            LogDirectory =
+                logDirectory ?? Path.Combine(Application.persistentDataPath, "Diagnostics");
             _flushThreshold = flushThreshold;
             _messageCount = 0;
-            
+
             // 디렉토리 생성 확인
             if (!Directory.Exists(LogDirectory))
             {
                 try
                 {
-                    Directory.CreateDirectory(LogDirectory);
+                    _ = Directory.CreateDirectory(LogDirectory);
                     LoggerManager.LogConditionalDebug($"Created directory: {LogDirectory}");
                 }
                 catch (Exception ex)
@@ -54,7 +61,6 @@ namespace Hian.Logger.Handlers.DiagnosticsLoggers
             TraceSource = new TraceSource(sourceName);
             ConfigureDefaultListeners();
         }
-    
 
         /// <summary>
         /// 기본 리스너 설정을 구성합니다.
@@ -65,9 +71,10 @@ namespace Hian.Logger.Handlers.DiagnosticsLoggers
             TraceSource.Listeners.Clear();
             TraceSource.Switch = new SourceSwitch("DefaultSwitch", "All")
             {
-                Level = SourceLevels.All
+                Level = SourceLevels.All,
             };
         }
+
         public virtual void Log(string message)
         {
             if (TraceSource != null)
@@ -128,15 +135,19 @@ namespace Hian.Logger.Handlers.DiagnosticsLoggers
             {
                 lock (_lockObject)
                 {
-                    TraceSource.TraceEvent(TraceEventType.Critical, 0,
-                        $"Exception: {exception.Message}\nStackTrace: {exception.StackTrace}");
+                    TraceSource.TraceEvent(
+                        TraceEventType.Critical,
+                        0,
+                        $"Exception: {exception.Message}\nStackTrace: {exception.StackTrace}"
+                    );
                     CheckAndFlush();
                 }
             }
         }
+
         public virtual void AddListener(TraceListener listener)
         {
-            TraceSource?.Listeners.Add(listener);
+            _ = (TraceSource?.Listeners.Add(listener));
         }
 
         public virtual void RemoveListener(TraceListener listener)
@@ -152,7 +163,7 @@ namespace Hian.Logger.Handlers.DiagnosticsLoggers
         {
             if (TraceSource != null)
             {
-                Flush();  // 정리 전 마지막 Flush
+                Flush(); // 정리 전 마지막 Flush
                 TraceSource.Close();
                 TraceSource = null;
             }
@@ -161,13 +172,13 @@ namespace Hian.Logger.Handlers.DiagnosticsLoggers
         // IDiagnosticsLogger 인터페이스 구현
         void IDiagnosticsLogger.Initialize(string sourceName, string logDirectory)
         {
-            Initialize(sourceName, logDirectory);  // 기본 flushThreshold로 호출
+            Initialize(sourceName, logDirectory); // 기본 flushThreshold로 호출
         }
 
         // GetLogFilePath를 protected virtual로 선언
         protected virtual string GetLogFilePath(string systemName)
         {
-            var path = Path.Combine(LogDirectory, $"{systemName}.log");
+            string path = Path.Combine(LogDirectory, $"{systemName}.log");
             return path;
         }
 
@@ -177,7 +188,11 @@ namespace Hian.Logger.Handlers.DiagnosticsLoggers
             {
                 lock (_lockObject)
                 {
-                    TraceSource?.TraceEvent(TraceEventType.Error, 0, $"Assertion failed: {message}");
+                    TraceSource?.TraceEvent(
+                        TraceEventType.Error,
+                        0,
+                        $"Assertion failed: {message}"
+                    );
                     Flush();
                 }
             }
@@ -189,12 +204,15 @@ namespace Hian.Logger.Handlers.DiagnosticsLoggers
             {
                 lock (_lockObject)
                 {
-                    TraceSource?.TraceEvent(TraceEventType.Critical, 0, $"Assertion failed: {message}");
+                    TraceSource?.TraceEvent(
+                        TraceEventType.Critical,
+                        0,
+                        $"Assertion failed: {message}"
+                    );
                     Flush();
                     throw new Exception($"Assertion failed: {message}");
                 }
             }
         }
-
     }
-} 
+}

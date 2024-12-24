@@ -1,6 +1,6 @@
+using System.IO;
 using Hian.Logger;
 using NUnit.Framework;
-using System.IO;
 
 namespace DiagnosticsLogger
 {
@@ -55,4 +55,4 @@ namespace DiagnosticsLogger
             StringAssert.Contains(errorMessage, logContent);
         }
     }
-} 
+}

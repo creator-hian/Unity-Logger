@@ -1,6 +1,6 @@
+using System.IO;
 using Hian.Logger;
 using NUnit.Framework;
-using System.IO;
 
 namespace DiagnosticsLogger
 {
@@ -18,14 +18,20 @@ namespace DiagnosticsLogger
             // Arrange
             string systemName = "TestSystem";
             _logger = LoggerManager.CreateDiagnosticsLogger(systemName);
-            Assert.IsTrue(LoggerManager.HasDiagnosticsLogger(systemName), "Logger should exist before cleanup");
+            Assert.IsTrue(
+                LoggerManager.HasDiagnosticsLogger(systemName),
+                "Logger should exist before cleanup"
+            );
 
             // Act
             LoggerManager.RemoveDiagnosticsLogger(systemName);
-            System.Threading.Thread.Sleep(WaitTimeMs);  // 정리 작업 대기
+            System.Threading.Thread.Sleep(WaitTimeMs); // 정리 작업 대기
 
             // Assert
-            Assert.IsFalse(LoggerManager.HasDiagnosticsLogger(systemName), "Logger should not exist after cleanup");
+            Assert.IsFalse(
+                LoggerManager.HasDiagnosticsLogger(systemName),
+                "Logger should not exist after cleanup"
+            );
         }
 
         /// <summary>
@@ -68,4 +74,4 @@ namespace DiagnosticsLogger
             Assert.DoesNotThrow(() => File.Delete(logPath));
         }
     }
-} 
+}

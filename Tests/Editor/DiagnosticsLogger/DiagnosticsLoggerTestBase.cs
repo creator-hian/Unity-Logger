@@ -1,9 +1,8 @@
+using System;
+using System.IO;
+using Hian.Logger;
 using NUnit.Framework;
 using UnityEngine;
-using System.IO;
-using System;
-using Hian.Logger;
-using Hian.Logger.Handlers.DiagnosticsLoggers;
 
 namespace DiagnosticsLogger
 {
@@ -44,10 +43,10 @@ namespace DiagnosticsLogger
                 }
                 catch (IOException ex)
                 {
-                    UnityEngine.Debug.LogError($"Failed to delete directory: {ex.Message}");
+                    Debug.LogError($"Failed to delete directory: {ex.Message}");
                 }
             }
-            Directory.CreateDirectory(_testDirectory);
+            _ = Directory.CreateDirectory(_testDirectory);
             LoggerManager.Cleanup();
         }
 
@@ -83,17 +82,20 @@ namespace DiagnosticsLogger
         {
             try
             {
-                using (var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                using (var reader = new StreamReader(fileStream))
-                {
-                    return reader.ReadToEnd();
-                }
+                using FileStream fileStream = new FileStream(
+                    path,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.ReadWrite
+                );
+                using StreamReader reader = new StreamReader(fileStream);
+                return reader.ReadToEnd();
             }
             catch (Exception ex)
             {
-                UnityEngine.Debug.LogError($"Failed to read log file: {ex.Message}");
+                Debug.LogError($"Failed to read log file: {ex.Message}");
                 throw;
             }
         }
     }
-} 
+}

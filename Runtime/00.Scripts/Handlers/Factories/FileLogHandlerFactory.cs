@@ -1,7 +1,7 @@
-using UnityEngine;
 using System;
 using System.IO;
 using Hian.Logger.Utilities;
+using UnityEngine;
 
 namespace Hian.Logger.Handlers.Factories
 {
@@ -24,13 +24,23 @@ namespace Hian.Logger.Handlers.Factories
             {
                 string logFilePath = path ?? GetDefaultLogFilePath();
                 ValidatePath(logFilePath);
-                return new FileLogHandler(logFilePath, enableConsoleOutput, LoggerManager.GetOriginalUnityHandler());
+                return new FileLogHandler(
+                    logFilePath,
+                    enableConsoleOutput,
+                    LoggerManager.GetOriginalUnityHandler()
+                );
             }
             catch (Exception ex)
             {
-                Debug.LogError($"Failed to create file handler at path: {path}\nError: {ex.Message}");
+                Debug.LogError(
+                    $"Failed to create file handler at path: {path}\nError: {ex.Message}"
+                );
                 string defaultPath = GetDefaultLogFilePath();
-                return new FileLogHandler(defaultPath, enableConsoleOutput, LoggerManager.GetOriginalUnityHandler());
+                return new FileLogHandler(
+                    defaultPath,
+                    enableConsoleOutput,
+                    LoggerManager.GetOriginalUnityHandler()
+                );
             }
         }
 
@@ -47,14 +57,14 @@ namespace Hian.Logger.Handlers.Factories
 
             string filePath = Path.Combine(baseDir, baseFileName + extension);
             int counter = 1;
-            
+
             while (File.Exists(filePath))
             {
                 filePath = Path.Combine(baseDir, $"{baseFileName}_{counter}{extension}");
                 counter++;
             }
 
-            Directory.CreateDirectory(baseDir);
+            _ = Directory.CreateDirectory(baseDir);
             return filePath;
         }
 
@@ -66,13 +76,17 @@ namespace Hian.Logger.Handlers.Factories
         private void ValidatePath(string path)
         {
             if (path.Length > 260)
+            {
                 throw new ArgumentException("Path is too long");
+            }
 
             string directory = Path.GetDirectoryName(path);
             if (string.IsNullOrEmpty(directory))
+            {
                 throw new ArgumentException("Invalid directory path");
+            }
 
-            Directory.CreateDirectory(directory);
+            _ = Directory.CreateDirectory(directory);
         }
     }
-} 
+}

@@ -1,10 +1,9 @@
 namespace Hian.Logger
 {
-
     /// <summary>
     /// Unity의 ILogHandler를 확장한 로그 핸들러 인터페이스입니다.
     /// </summary>
-    public interface ILogHandler :  UnityEngine.ILogHandler
+    public interface ILogHandler : UnityEngine.ILogHandler
     {
         /// <summary>
         /// 로그 파일의 경로를 설정합니다.
@@ -23,4 +22,4 @@ namespace Hian.Logger
         /// </summary>
         void Cleanup();
     }
-} 
+}

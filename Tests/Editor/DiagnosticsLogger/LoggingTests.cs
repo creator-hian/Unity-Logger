@@ -1,7 +1,7 @@
-using Hian.Logger;
-using NUnit.Framework;
 using System;
 using System.IO;
+using Hian.Logger;
+using NUnit.Framework;
 
 namespace DiagnosticsLogger
 {
@@ -73,7 +73,7 @@ namespace DiagnosticsLogger
             {
                 _logger.Log(message);
             }
-            
+
             _logger.Flush();
             System.Threading.Thread.Sleep(WaitTimeMs);
 
@@ -87,4 +87,4 @@ namespace DiagnosticsLogger
             }
         }
     }
-} 
+}

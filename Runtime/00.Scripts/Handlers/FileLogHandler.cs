@@ -1,7 +1,7 @@
-using UnityEngine;
 using System;
 using System.IO;
 using System.Text;
+using UnityEngine;
 
 namespace Hian.Logger.Handlers
 {
@@ -26,7 +26,11 @@ namespace Hian.Logger.Handlers
         /// <param name="enableConsoleOutput">Unity 콘솔 출력 활성화 여부</param>
         /// <param name="defaultLogHandler">기본 로그 핸들러</param>
         /// <exception cref="ArgumentNullException">logFilePath가 null인 경우</exception>
-        public FileLogHandler(string logFilePath, bool enableConsoleOutput = true, UnityEngine.ILogHandler defaultLogHandler = null)
+        public FileLogHandler(
+            string logFilePath,
+            bool enableConsoleOutput = true,
+            UnityEngine.ILogHandler defaultLogHandler = null
+        )
         {
             _logFilePath = logFilePath ?? throw new ArgumentNullException(nameof(logFilePath));
             _enableConsoleOutput = enableConsoleOutput;
@@ -43,7 +47,10 @@ namespace Hian.Logger.Handlers
         public void SetLogPath(string path)
         {
             ThrowIfDisposed();
-            if (path == null) throw new ArgumentNullException(nameof(path));
+            if (path == null)
+            {
+                throw new ArgumentNullException(nameof(path));
+            }
 
             lock (_lockObject)
             {
@@ -72,7 +79,12 @@ namespace Hian.Logger.Handlers
         /// <param name="format">메시지 포맷</param>
         /// <param name="args">포맷 인자</param>
         /// <exception cref="ObjectDisposedException">이미 Dispose된 경우</exception>
-        public void LogFormat(LogType logType, UnityEngine.Object context, string format, params object[] args)
+        public void LogFormat(
+            LogType logType,
+            UnityEngine.Object context,
+            string format,
+            params object[] args
+        )
         {
             ThrowIfDisposed();
 
@@ -101,7 +113,8 @@ namespace Hian.Logger.Handlers
 
             string timeStamp = DateTime.Now.ToString("HH:mm:ss.fff");
             string contextInfo = context != null ? $"[{context.name}] " : "";
-            string logMessage = $"[{timeStamp}][Exception]{contextInfo}{exception}\n{exception.StackTrace}\n";
+            string logMessage =
+                $"[{timeStamp}][Exception]{contextInfo}{exception}\n{exception.StackTrace}\n";
 
             WriteToFile(logMessage);
 
@@ -122,12 +135,12 @@ namespace Hian.Logger.Handlers
                 string directory = Path.GetDirectoryName(_logFilePath);
                 if (!string.IsNullOrEmpty(directory))
                 {
-                    Directory.CreateDirectory(directory);
+                    _ = Directory.CreateDirectory(directory);
                 }
 
                 _streamWriter = new StreamWriter(_logFilePath, true, Encoding.UTF8)
                 {
-                    AutoFlush = true
+                    AutoFlush = true,
                 };
             }
             catch (Exception ex)
@@ -157,7 +170,7 @@ namespace Hian.Logger.Handlers
                 catch (Exception ex)
                 {
                     Debug.LogError($"Failed to write to log file: {ex.Message}");
-                    
+
                     // 스트림 재초기화 시도
                     try
                     {
@@ -207,7 +220,10 @@ namespace Hian.Logger.Handlers
         /// </summary>
         public void Dispose()
         {
-            if (_isDisposed) return;
+            if (_isDisposed)
+            {
+                return;
+            }
 
             lock (_lockObject)
             {
@@ -229,4 +245,4 @@ namespace Hian.Logger.Handlers
             Dispose();
         }
     }
-} 
+}
