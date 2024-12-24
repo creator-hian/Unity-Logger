@@ -1,13 +1,13 @@
+using System;
+using System.IO;
+using System.Text;
+using System.Threading;
+using Hian.Logger;
+using Hian.Logger.Handlers.Factories; // FileLogHandlerFactory를 위한 참조
+using Hian.Logger.Utilities; // LogFileUtility를 위한 참조
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
-using System.IO;
-using System.Threading;
-using Hian.Logger;
-using System.Text;
-using System;
-using Hian.Logger.Utilities;  // LogFileUtility를 위한 참조
-using Hian.Logger.Handlers.Factories;  // FileLogHandlerFactory를 위한 참조
 
 public class LoggerManagerTests
 {
@@ -32,7 +32,7 @@ public class LoggerManagerTests
     {
         LoggerManager.ResetToDefaultHandler();
         Thread.Sleep(WaitTimeMs); // 핸들러가 정리되기를 기다림
-        
+
         if (File.Exists(_testLogPath))
         {
             try
@@ -53,11 +53,14 @@ public class LoggerManagerTests
         {
             try
             {
-                using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                using (var reader = new StreamReader(stream, Encoding.UTF8))
-                {
-                    return reader.ReadToEnd();
-                }
+                using FileStream stream = new FileStream(
+                    filePath,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.ReadWrite
+                );
+                using StreamReader reader = new StreamReader(stream, Encoding.UTF8);
+                return reader.ReadToEnd();
             }
             catch (IOException ex)
             {
@@ -75,7 +78,7 @@ public class LoggerManagerTests
         Assert.IsFalse(File.Exists(_testLogPath));
 
         // Act
-        var handler = _fileLogHandlerFactory.CreateHandler(_testLogPath);
+        Hian.Logger.ILogHandler handler = _fileLogHandlerFactory.CreateHandler(_testLogPath);
         LoggerManager.SetHandler(handler);
         LogAssert.Expect(LogType.Log, "Test message");
         Debug.Log("Test message");
@@ -90,12 +93,12 @@ public class LoggerManagerTests
     public void SetHandler_WithFileHandler_WithoutPath_CreatesLogFileInDefaultLocation()
     {
         // Act
-        var handler = _fileLogHandlerFactory.CreateHandler();
+        Hian.Logger.ILogHandler handler = _fileLogHandlerFactory.CreateHandler();
         LoggerManager.SetHandler(handler);
         Debug.Log("Default path test");
 
         // Assert
-        var logFiles = LogFileUtility.GetLogFiles();
+        FileInfo[] logFiles = LogFileUtility.GetLogFiles();
         Assert.IsTrue(logFiles.Length > 0);
     }
 
@@ -103,8 +106,8 @@ public class LoggerManagerTests
     public void ResetToDefaultHandler_RestoresOriginalHandler()
     {
         // Arrange
-        var originalHandler = Debug.unityLogger.logHandler;
-        var handler = _fileLogHandlerFactory.CreateHandler(_testLogPath);
+        UnityEngine.ILogHandler originalHandler = Debug.unityLogger.logHandler;
+        Hian.Logger.ILogHandler handler = _fileLogHandlerFactory.CreateHandler(_testLogPath);
         LoggerManager.SetHandler(handler);
 
         // Act
@@ -118,7 +121,7 @@ public class LoggerManagerTests
     public void MultipleLogMessages_AreWrittenToFile()
     {
         // Arrange
-        var handler = _fileLogHandlerFactory.CreateHandler(_testLogPath);
+        Hian.Logger.ILogHandler handler = _fileLogHandlerFactory.CreateHandler(_testLogPath);
         LoggerManager.SetHandler(handler);
 
         // 예상되는 로그 메시지 설정
@@ -145,7 +148,7 @@ public class LoggerManagerTests
     public void SetHandler_WithNullHandler_ThrowsException()
     {
         // Arrange & Act & Assert
-        Assert.Throws<ArgumentNullException>(() => LoggerManager.SetHandler(null));
+        _ = Assert.Throws<ArgumentNullException>(static () => LoggerManager.SetHandler(null));
     }
 
     [Test]
@@ -153,18 +156,21 @@ public class LoggerManagerTests
     {
         // Arrange
         string invalidPath = "\\\\invalid:path";
-        
+
         // 에러 로그 예상
-        LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("Failed to create file handler.*"));
+        LogAssert.Expect(
+            LogType.Error,
+            new System.Text.RegularExpressions.Regex("Failed to create file handler.*")
+        );
 
         // Act
-        var handler = _fileLogHandlerFactory.CreateHandler(invalidPath);
+        Hian.Logger.ILogHandler handler = _fileLogHandlerFactory.CreateHandler(invalidPath);
         LoggerManager.SetHandler(handler);
         Debug.Log("Test message");
 
         // Assert
         Assert.NotNull(handler);
-        var logFiles = LogFileUtility.GetLogFiles();
+        FileInfo[] logFiles = LogFileUtility.GetLogFiles();
         Assert.IsTrue(logFiles.Length > 0, "Should create log file in default location");
     }
 }

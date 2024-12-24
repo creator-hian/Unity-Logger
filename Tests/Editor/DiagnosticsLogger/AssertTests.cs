@@ -1,7 +1,7 @@
-using NUnit.Framework;
 using System;
 using System.IO;
 using Hian.Logger;
+using NUnit.Framework;
 
 namespace DiagnosticsLogger
 {
@@ -70,7 +70,9 @@ namespace DiagnosticsLogger
             string assertMessage = "Test assertion message";
 
             // Act & Assert
-            var ex = Assert.Throws<Exception>(() => _logger.AssertOrThrow(false, assertMessage));
+            Exception ex = Assert.Throws<Exception>(
+                () => _logger.AssertOrThrow(false, assertMessage)
+            );
             StringAssert.Contains(assertMessage, ex.Message);
 
             System.Threading.Thread.Sleep(WaitTimeMs);
@@ -108,4 +110,4 @@ namespace DiagnosticsLogger
             }
         }
     }
-} 
+}

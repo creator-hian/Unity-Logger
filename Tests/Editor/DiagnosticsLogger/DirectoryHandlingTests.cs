@@ -1,10 +1,10 @@
-using NUnit.Framework;
-using UnityEngine;
-using UnityEngine.TestTools;
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
 using Hian.Logger;
+using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace DiagnosticsLogger
 {
@@ -22,7 +22,7 @@ namespace DiagnosticsLogger
             // Arrange
             string systemName = "TestSystem";
             string customDirectory = Path.Combine(_testDirectory, "CustomLogs");
-            Directory.CreateDirectory(customDirectory);
+            _ = Directory.CreateDirectory(customDirectory);
 
             // Act
             _logger = LoggerManager.CreateDiagnosticsLogger(systemName, customDirectory);
@@ -53,7 +53,11 @@ namespace DiagnosticsLogger
             System.Threading.Thread.Sleep(WaitTimeMs);
 
             // Assert
-            string defaultPath = Path.Combine(Application.persistentDataPath, "Diagnostics", $"{systemName}.log");
+            string defaultPath = Path.Combine(
+                Application.persistentDataPath,
+                "Diagnostics",
+                $"{systemName}.log"
+            );
             Assert.That(File.Exists(defaultPath), "Log file should exist in default directory");
         }
 
@@ -71,8 +75,9 @@ namespace DiagnosticsLogger
             LogAssert.Expect(LogType.Error, new Regex("Failed to create directory.*"));
 
             // Act & Assert
-            Assert.Throws<ArgumentException>(() => 
-                LoggerManager.CreateDiagnosticsLogger(systemName, invalidPath));
+            _ = Assert.Throws<ArgumentException>(
+                () => LoggerManager.CreateDiagnosticsLogger(systemName, invalidPath)
+            );
         }
     }
-} 
+}

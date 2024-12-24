@@ -1,6 +1,6 @@
+using System;
 using Hian.Logger;
 using NUnit.Framework;
-using System;
 
 namespace DiagnosticsLogger
 {
@@ -30,11 +30,12 @@ namespace DiagnosticsLogger
         public void WithDuplicateSystem_ThrowsException()
         {
             // Arrange
-            LoggerManager.CreateDiagnosticsLogger("TestSystem");
+            _ = LoggerManager.CreateDiagnosticsLogger("TestSystem");
 
             // Act & Assert
-            Assert.Throws<InvalidOperationException>(() => 
-                LoggerManager.CreateDiagnosticsLogger("TestSystem"));
+            _ = Assert.Throws<InvalidOperationException>(
+                static () => LoggerManager.CreateDiagnosticsLogger("TestSystem")
+            );
         }
     }
-} 
+}

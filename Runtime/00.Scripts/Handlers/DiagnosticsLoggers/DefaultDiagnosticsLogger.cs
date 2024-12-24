@@ -10,13 +10,13 @@ namespace Hian.Logger.Handlers.DiagnosticsLoggers
     /// </summary>
     public class DefaultDiagnosticsLogger : BaseDiagnosticsLogger
     {
-        public string SystemName
-        {
-            get;
-            private set;
-        }
+        public string SystemName { get; private set; }
 
-        public override void Initialize(string sourceName, string logDirectory = null, int flushThreshold = 100)
+        public override void Initialize(
+            string sourceName,
+            string logDirectory = null,
+            int flushThreshold = 100
+        )
         {
             SystemName = sourceName;
             base.Initialize(sourceName, logDirectory, flushThreshold);
@@ -34,16 +34,16 @@ namespace Hian.Logger.Handlers.DiagnosticsLoggers
                 string directory = Path.GetDirectoryName(logPath);
                 if (!string.IsNullOrEmpty(directory))
                 {
-                    Directory.CreateDirectory(directory);
+                    _ = Directory.CreateDirectory(directory);
                     LoggerManager.LogConditionalDebug($"Created directory: {directory}");
                 }
 
-                var textListener = new TextWriterTraceListener(logPath)
+                TextWriterTraceListener textListener = new TextWriterTraceListener(logPath)
                 {
-                    TraceOutputOptions = TraceOptions.DateTime | TraceOptions.ThreadId
+                    TraceOutputOptions = TraceOptions.DateTime | TraceOptions.ThreadId,
                 };
-                
-                TraceSource.Listeners.Add(textListener);
+
+                _ = TraceSource.Listeners.Add(textListener);
                 TraceSource.Switch.Level = SourceLevels.All;
                 LoggerManager.LogConditionalDebug($"Added listener for: {logPath}");
                 TraceSource.Flush();
@@ -82,4 +82,4 @@ namespace Hian.Logger.Handlers.DiagnosticsLoggers
             TraceSource?.Flush();
         }
     }
-} 
+}

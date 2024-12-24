@@ -44,4 +44,4 @@ namespace Hian.Logger
         /// <exception cref="System.Exception">조건이 false인 경우 발생</exception>
         void AssertOrThrow(bool condition, string message);
     }
-} 
+}

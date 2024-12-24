@@ -1,7 +1,7 @@
-using UnityEngine;
 using System;
 using System.IO;
 using System.Linq;
+using UnityEngine;
 
 namespace Hian.Logger.Utilities
 {
@@ -11,12 +11,11 @@ namespace Hian.Logger.Utilities
     /// </summary>
     public static class LogFileUtility
     {
-        private const string LOG_DIRECTORY_NAME = "Logs";
-        private const string LOG_FILE_PATTERN = "*.{0}";
         private static readonly string[] SUPPORTED_EXTENSIONS = { "log", "txt" };
-        private const int MAX_PATH_LENGTH = 260;
-
-        private static string _defaultLogDirectory = Path.Combine(Application.persistentDataPath, "Logs");
+        private static string _defaultLogDirectory = Path.Combine(
+            Application.persistentDataPath,
+            "Logs"
+        );
 
         /// <summary>
         /// 기본 로그 디렉토리 경로를 가져옵거나 설정합니다.
@@ -28,8 +27,7 @@ namespace Hian.Logger.Utilities
             get => _defaultLogDirectory;
             set
             {
-                if (value == null) throw new ArgumentNullException(nameof(value));
-                _defaultLogDirectory = value;
+                _defaultLogDirectory = value ?? throw new ArgumentNullException(nameof(value));
                 EnsureDirectoryExists(_defaultLogDirectory);
             }
         }
@@ -45,7 +43,7 @@ namespace Hian.Logger.Utilities
             try
             {
                 int count = 0;
-                foreach (var file in GetLogFiles())
+                foreach (FileInfo file in GetLogFiles())
                 {
                     try
                     {
@@ -64,7 +62,11 @@ namespace Hian.Logger.Utilities
             }
             catch (Exception ex)
             {
-                if (throwOnError) throw;
+                if (throwOnError)
+                {
+                    throw;
+                }
+
                 Debug.LogError($"Failed to delete log files: {ex.Message}");
                 return 0;
             }
@@ -81,14 +83,16 @@ namespace Hian.Logger.Utilities
         public static int DeleteOldLogs(int days, bool throwOnError = false)
         {
             if (days <= 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(days), "Days must be greater than 0");
+            }
 
             try
             {
-                var cutoffDate = DateTime.Now.AddDays(-days);
+                DateTime cutoffDate = DateTime.Now.AddDays(-days);
                 int count = 0;
 
-                foreach (var file in GetLogFiles().Where(f => f.LastWriteTime < cutoffDate))
+                foreach (FileInfo file in GetLogFiles().Where(f => f.LastWriteTime < cutoffDate))
                 {
                     try
                     {
@@ -107,7 +111,11 @@ namespace Hian.Logger.Utilities
             }
             catch (Exception ex)
             {
-                if (throwOnError) throw;
+                if (throwOnError)
+                {
+                    throw;
+                }
+
                 Debug.LogError($"Failed to delete old logs: {ex.Message}");
                 return 0;
             }
@@ -127,7 +135,7 @@ namespace Hian.Logger.Utilities
                 string dateString = date.ToString("yyyy-MM-dd");
                 int count = 0;
 
-                foreach (var file in GetLogFiles().Where(f => f.Name.Contains(dateString)))
+                foreach (FileInfo file in GetLogFiles().Where(f => f.Name.Contains(dateString)))
                 {
                     try
                     {
@@ -146,7 +154,11 @@ namespace Hian.Logger.Utilities
             }
             catch (Exception ex)
             {
-                if (throwOnError) throw;
+                if (throwOnError)
+                {
+                    throw;
+                }
+
                 Debug.LogError($"Failed to delete logs by date: {ex.Message}");
                 return 0;
             }
@@ -162,18 +174,29 @@ namespace Hian.Logger.Utilities
         {
             try
             {
-                var directory = new DirectoryInfo(DefaultLogDirectory);
-                if (!directory.Exists) return Array.Empty<FileInfo>();
+                DirectoryInfo directory = new DirectoryInfo(DefaultLogDirectory);
+                if (!directory.Exists)
+                {
+                    return Array.Empty<FileInfo>();
+                }
 
-                return directory.GetFiles()
-                    .Where(f => f.Name.StartsWith("log_") && 
-                               SUPPORTED_EXTENSIONS.Any(ext => f.Extension.Equals($".{ext}", 
-                                   StringComparison.OrdinalIgnoreCase)))
+                return directory
+                    .GetFiles()
+                    .Where(f =>
+                        f.Name.StartsWith("log_")
+                        && SUPPORTED_EXTENSIONS.Any(ext =>
+                            f.Extension.Equals($".{ext}", StringComparison.OrdinalIgnoreCase)
+                        )
+                    )
                     .ToArray();
             }
             catch (Exception ex)
             {
-                if (throwOnError) throw;
+                if (throwOnError)
+                {
+                    throw;
+                }
+
                 Debug.LogError($"Failed to get log files: {ex.Message}");
                 return Array.Empty<FileInfo>();
             }
@@ -188,7 +211,7 @@ namespace Hian.Logger.Utilities
             {
                 try
                 {
-                    Directory.CreateDirectory(path);
+                    _ = Directory.CreateDirectory(path);
                 }
                 catch (Exception ex)
                 {
@@ -215,4 +238,4 @@ namespace Hian.Logger.Utilities
             }
         }
     }
-} 
+}

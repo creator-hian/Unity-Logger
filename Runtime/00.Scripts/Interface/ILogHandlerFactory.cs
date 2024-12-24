@@ -13,4 +13,4 @@ namespace Hian.Logger
         /// <returns>생성된 ILogHandler 인스턴스</returns>
         ILogHandler CreateHandler(string path = null, bool enableConsoleOutput = true);
     }
-} 
+}

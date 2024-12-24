@@ -36,4 +36,4 @@ namespace Hian.Logger
         /// </summary>
         void Flush();
     }
-} 
+}
